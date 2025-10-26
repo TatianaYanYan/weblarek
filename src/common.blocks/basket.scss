@@ -10,6 +10,7 @@
     padding: 0;
     margin: 0;
     flex-grow: 1;
+    overflow: auto; // прокрутка списка товаров внутри модалки
   }
 
   &__item {

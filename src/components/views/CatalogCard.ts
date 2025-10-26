@@ -1,15 +1,12 @@
 // src/components/views/CatalogCard.ts
-import { ProductCardBase } from './ProductCardBase';
-import { IProduct } from '../../types';
-import { ensureElement } from '../../utils/utils';
+import { ProductCardBase } from '@/components/views/ProductCardBase';
+import { IProduct } from '@/types';
+import { ensureElement } from '@/utils/utils';
 
 export class CatalogCard extends ProductCardBase<ICatalogCardData> {
-  private _button: HTMLButtonElement;
-
   // Принимаем обработчик onClick вместо events
   constructor(container: HTMLElement, onClick: () => void) {
     super(container); // ← не передаём events, так как он не нужен
-    this._button = ensureElement<HTMLButtonElement>('.card__button', this.container);
 
     // Слушатель клика — вызываем переданный обработчик
     this.container.addEventListener('click', () => {
@@ -17,9 +14,8 @@ export class CatalogCard extends ProductCardBase<ICatalogCardData> {
     });
   }
 
-  set inCart(value: boolean) {
-    this._button.textContent = value ? 'Удалить из корзины' : 'Купить';
-  }
+  // В карточке каталога нет кнопки покупки — состояние inCart не отображается
+  set inCart(_: boolean) { /* noop */ }
 
   // Переопределяем сеттер product, чтобы вызвать render с нужными данными
   set product(value: IProduct) {
@@ -29,7 +25,7 @@ export class CatalogCard extends ProductCardBase<ICatalogCardData> {
       category: value.category,
       price: value.price,
       image: value.image,
-      inCart: false // будет обновлено позже через отдельный вызов set inCart
+      inCart: false
     });
   }
 }

@@ -1,5 +1,5 @@
 // src/components/views/Gallery.ts
-import { Component } from '../base/Component';
+import { Component } from '@/components/base/Component';
 
 export class Gallery extends Component<IGalleryData> {
   private _list: HTMLElement;

@@ -26,10 +26,13 @@
     border-radius: 3rem;
     box-sizing: border-box;
     position: relative;
+    max-height: 90vh; // ограничиваем высоту модалки по окну
+    overflow: hidden; // прокрутка внутри контента
   }
 
   &__content {
     flex-grow: 1;
+    overflow: auto; // внутренний скролл контента
   }
 
   &__title {

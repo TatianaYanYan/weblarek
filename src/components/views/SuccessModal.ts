@@ -1,7 +1,7 @@
 // src/components/views/SuccessModal.ts
-import { Component } from '../base/Component';
-import { IEvents } from '../base/Events';
-import { ensureElement } from '../../utils/utils';
+import { Component } from '@/components/base/Component';
+import { IEvents } from '@/components/base/Events';
+import { ensureElement } from '@/utils/utils';
 
 export class SuccessModal extends Component<ISuccessModalData> {
   private _closeButton: HTMLButtonElement;

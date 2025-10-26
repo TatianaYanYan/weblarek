@@ -1,8 +1,8 @@
 // src/components/views/OrderFormStep1.ts
-import { Form } from './Form';
-import { TPayment } from '../../types';
-import { ensureElement } from '../../utils/utils';
-import { IEvents } from '../base/Events'; // ← ДОБАВЛЕНО
+import { Form } from '@/components/views/Form';
+import { TPayment } from '@/types';
+import { ensureElement } from '@/utils/utils';
+import { IEvents } from '@/components/base/Events'; // ← ДОБАВЛЕНО
 
 export class OrderFormStep1 extends Form<IOrderFormStep1Data> {
   private _cardButton: HTMLButtonElement;

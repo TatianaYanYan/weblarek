@@ -1,7 +1,7 @@
 // src/components/views/PreviewCard.ts
-import { ProductCardBase } from './ProductCardBase';
-import { IProduct } from '../../types';
-import { ensureElement } from '../../utils/utils';
+import { ProductCardBase } from '@/components/views/ProductCardBase';
+import { IProduct } from '@/types';
+import { ensureElement } from '@/utils/utils';
 
 export class PreviewCard extends ProductCardBase<IPreviewCardData> {
   private _description: HTMLElement;
@@ -24,7 +24,13 @@ export class PreviewCard extends ProductCardBase<IPreviewCardData> {
   }
 
   set inCart(value: boolean) {
-    this._button.textContent = value ? 'Удалить из корзины' : 'Купить';
+    if (this._product?.price === null) {
+      this._button.disabled = true;
+      this._button.textContent = 'Недоступно';
+    } else {
+      this._button.disabled = false;
+      this._button.textContent = value ? 'Удалить из корзины' : 'Купить';
+    }
   }
 
   // Переопределяем сеттер product для вызова render

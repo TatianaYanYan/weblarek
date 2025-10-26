@@ -1,7 +1,7 @@
 // src/components/views/OrderFormStep2.ts
-import { Form } from './Form';
-import { ensureElement } from '../../utils/utils';
-import { IEvents } from '../base/Events'; // ← ДОБАВЛЕНО
+import { Form } from '@/components/views/Form';
+import { ensureElement } from '@/utils/utils';
+import { IEvents } from '@/components/base/Events'; // ← ДОБАВЛЕНО
 
 export class OrderFormStep2 extends Form<IOrderFormStep2Data> {
   private _emailInput: HTMLInputElement;

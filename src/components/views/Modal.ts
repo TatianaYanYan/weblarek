@@ -29,12 +29,12 @@ export class Modal extends Component<IModalData> {
   }
 
   open() {
-    this.container.classList.add('modal_open');
+    this.container.classList.add('modal_active');
     document.body.style.overflow = 'hidden';
   }
 
   close() {
-    this.container.classList.remove('modal_open');
+    this.container.classList.remove('modal_active');
     document.body.style.overflow = '';
   }
 }

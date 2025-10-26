@@ -1,7 +1,7 @@
 // src/components/views/Form.ts
-import { Component } from '../base/Component';
-import { IEvents } from '../base/Events';
-import { ensureElement } from '../../utils/utils';
+import { Component } from '@/components/base/Component';
+import { IEvents } from '@/components/base/Events';
+import { ensureElement } from '@/utils/utils';
 
 export abstract class Form<T> extends Component<T> {
   protected _form: HTMLFormElement;

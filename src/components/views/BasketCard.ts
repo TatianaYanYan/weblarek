@@ -1,7 +1,7 @@
 // src/components/views/BasketCard.ts
-import { ProductCardBase } from './ProductCardBase';
-import { IProduct } from '../../types';
-import { ensureElement } from '../../utils/utils';
+import { ProductCardBase } from '@/components/views/ProductCardBase';
+import { IProduct } from '@/types';
+import { ensureElement } from '@/utils/utils';
 
 export class BasketCard extends ProductCardBase<IBasketCardData> {
   private _index: HTMLElement;

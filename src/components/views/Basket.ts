@@ -1,14 +1,13 @@
 // src/components/views/Basket.ts
-import { Component } from '../base/Component';
-import { IEvents } from '../base/Events';
-import { IProduct } from '../../types';
-import { ensureElement } from '../../utils/utils';
+import { Component } from '@/components/base/Component';
+import { IEvents } from '@/components/base/Events';
+import { IProduct } from '@/types';
+import { ensureElement } from '@/utils/utils';
 
 export class Basket extends Component<IBasketData> {
   private _list: HTMLElement;
   private _total: HTMLElement;
   private _button: HTMLButtonElement;
-  private _emptyMessage: HTMLElement;
   protected events: IEvents;
 
   constructor(container: HTMLElement, events: IEvents) {
@@ -17,7 +16,6 @@ export class Basket extends Component<IBasketData> {
     this._list = ensureElement<HTMLElement>('.basket__list', this.container);
     this._total = ensureElement<HTMLElement>('.basket__price', this.container);
     this._button = ensureElement<HTMLButtonElement>('.basket__button', this.container);
-    this._emptyMessage = ensureElement<HTMLElement>('.basket__empty', this.container);
 
     this._button.addEventListener('click', () => {
       this.events.emit('basket:submit', {}); // ← тоже объект
@@ -26,17 +24,15 @@ export class Basket extends Component<IBasketData> {
 
   set items(value: IProduct[]) {
     if (value.length === 0) {
-      this._list.innerHTML = '';
-      this._emptyMessage.style.display = 'block';
+      this._list.innerHTML = '<p class="basket__empty">Корзина пуста</p>';
       this._button.disabled = true;
     } else {
-      this._emptyMessage.style.display = 'none';
       this._button.disabled = false;
       this._list.innerHTML = value.map((item, index) => `
         <li class="basket__item card card_compact">
           <span class="basket__item-index">${index + 1}</span>
           <span class="card__title">${item.title}</span>
-          <span class="card__price">${item.price !== null ? item.price + ' руб.' : 'Недоступно'}</span>
+          <span class="card__price">${item.price !== null ? item.price + ' синапсов' : 'Бесценно'}</span>
           <button class="basket__item-delete card__button" data-id="${item.id}" aria-label="удалить"></button>
         </li>
       `).join('');
@@ -53,7 +49,7 @@ export class Basket extends Component<IBasketData> {
   }
 
   set total(value: number) {
-    this._total.textContent = `${value} руб.`;
+    this._total.textContent = `${value} синапсов`;
   }
 
   set isEmpty(value: boolean) {

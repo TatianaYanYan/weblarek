@@ -1,13 +1,20 @@
-import { IBuyer, TPayment } from '../../types';
+import { IBuyer, TPayment } from '@/types';
+import { IEvents } from '@/components/base/Events';
 
 export class Buyer {
   payment: TPayment = '';
   address: string = '';
   email: string = '';
   phone: string = '';
+  private events?: IEvents;
+
+  constructor(events?: IEvents) {
+    this.events = events;
+  }
 
   set(field: keyof IBuyer, value: string | TPayment): void {
     (this as any)[field] = value;
+    this.events?.emit('buyer:change', { field, value });
   }
 
   getData(): IBuyer {
@@ -24,6 +31,7 @@ export class Buyer {
     this.address = '';
     this.email = '';
     this.phone = '';
+    this.events?.emit('buyer:change', {});
   }
 
   validate(): Partial<Record<keyof IBuyer, string>> {
