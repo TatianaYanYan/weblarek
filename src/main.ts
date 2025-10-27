@@ -13,6 +13,7 @@ import { Modal } from '@/components/views/Modal';
 import { CatalogCard } from '@/components/views/CatalogCard';
 import { PreviewCard } from '@/components/views/PreviewCard';
 import { Basket } from '@/components/views/Basket';
+import { BasketCard } from '@/components/views/BasketCard';
 import { OrderFormStep1 } from '@/components/views/OrderFormStep1';
 import { OrderFormStep2 } from '@/components/views/OrderFormStep2';
 
@@ -48,12 +49,9 @@ const tplSuccess = ensureElement<HTMLTemplateElement>('#success');
 function renderCatalog() {
   const items = catalog.getItems().map((product) => {
     const el = cloneTemplate<HTMLElement>(tplCardCatalog);
-    const card = new CatalogCard(el, () => {
-      catalog.setSelected(product);
-      events.emit('ui:open-product', { id: product.id });
-    });
+    const card = new CatalogCard(el, events);
+    // данные только для отображения
     card.product = product;
-    card.inCart = cart.has(product.id);
     return card.render();
   });
   gallery.catalog = items;
@@ -63,27 +61,31 @@ function openProductPreview() {
   const product = catalog.getSelected();
   if (!product) return;
   const el = cloneTemplate<HTMLElement>(tplCardPreview);
-  const preview = new PreviewCard(el, () => {
-    if (cart.has(product.id)) {
-      cart.remove(product);
-    } else {
-      cart.add(product);
-    }
-    modal.close();
-  });
+  const preview = new PreviewCard(el, events);
   preview.product = product;
   preview.inCart = cart.has(product.id);
   modal.content = preview.render();
   modal.open();
 }
 
+let isBasketOpen = false;
 function openBasket() {
   const el = cloneTemplate<HTMLElement>(tplBasket);
   const basketView = new Basket(el, events);
-  basketView.items = cart.getItems();
+  // создаём элементы из темплейта basket-item
+  const itemTpl = ensureElement<HTMLTemplateElement>('#card-basket');
+  const itemElements = cart.getItems().map((p, idx) => {
+    const li = cloneTemplate<HTMLElement>(itemTpl);
+    const item = new BasketCard(li, (id: string) => events.emit('basket:remove', { id }));
+    item.product = p;
+    item.index = idx + 1;
+    return item.render();
+  });
+  basketView.items = itemElements;
   basketView.total = cart.getTotal();
   modal.content = basketView.render();
   modal.open();
+  isBasketOpen = true;
 }
 
 function openOrderStep1() {
@@ -102,6 +104,7 @@ function openOrderStep1() {
   });
   modal.content = form1.render();
   modal.open();
+  isBasketOpen = false;
 }
 
 function openOrderStep2() {
@@ -139,30 +142,44 @@ function openOrderStep2() {
   });
   modal.content = form2.render();
   modal.open();
+  isBasketOpen = false;
 }
 
 // === Подписки на события моделей ===
-events.on('catalog:change', () => {
-  renderCatalog();
-});
+events.on('catalog:change', () => renderCatalog());
 
-events.on<{ product: unknown }>('catalog:selected', () => {
-  openProductPreview();
+events.on<{ id: string }>('catalog:select', ({ id }) => {
+  const prod = catalog.getItemById(id);
+  if (prod) catalog.setSelected(prod);
 });
+events.on('catalog:selected', () => openProductPreview());
 
 events.on('cart:change', () => {
   header.counter = cart.getCount();
-  // если открыта корзина — перерисуем её
-  const content = modalRoot.querySelector('.basket');
-  if (content && modalRoot.classList.contains('modal_active')) {
-    openBasket();
-  }
-  // обновим в каталоге состояния кнопок
-  renderCatalog();
+  if (isBasketOpen) openBasket();
 });
 
-events.on('buyer:change', () => {
-  // формы сами валидируются на input, здесь ничего не делаем
+// Реакции на поля форм: данные -> модель -> валидация -> ошибки в форме
+events.on<{ payment: 'card' | 'cash' }>('order:payment', ({ payment }) => {
+  buyer.set('payment', payment);
+  const errors = buyer.validate();
+  // подсветим кнопки в форме 1
+  const container = ensureElement<HTMLElement>('#modal-container .order');
+  const cardBtn = container.querySelector<HTMLButtonElement>('[name="card"]');
+  const cashBtn = container.querySelector<HTMLButtonElement>('[name="cash"]');
+  if (cardBtn && cashBtn) {
+    cardBtn.classList.toggle('button_alt-active', payment === 'card');
+    cashBtn.classList.toggle('button_alt-active', payment === 'cash');
+  }
+});
+events.on<{ address: string }>('order:address', ({ address }) => {
+  buyer.set('address', address);
+});
+events.on<{ email: string }>('contacts:email', ({ email }) => {
+  buyer.set('email', email);
+});
+events.on<{ phone: string }>('contacts:phone', ({ phone }) => {
+  buyer.set('phone', phone);
 });
 
 // === Подписки на события UI ===
@@ -171,6 +188,14 @@ events.on('basket:submit', () => openOrderStep1());
 events.on<{ id: string }>('basket:remove', ({ id }) => {
   const item = cart.getItems().find((p) => p.id === id);
   if (item) cart.remove(item);
+});
+events.on<{ id: string }>('preview:toggle', ({ id }) => {
+  const item = catalog.getItemById(id);
+  if (!item) return;
+  if (item.price === null) return;
+  if (cart.has(id)) cart.remove(item); else cart.add(item);
+  // по требованию: после действия модалка закрывается
+  modal.close();
 });
 
 // === Старт: загрузка каталога ===

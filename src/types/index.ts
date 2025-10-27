@@ -45,20 +45,3 @@ export interface IOrderResponse {
   id: string;
   total: number;
 }
-
-// === ТИПЫ ДЛЯ ГЛАВНОЙ СТРАНИЦЫ ===
-
-export interface IPageState {
-	cartCounter: number;
-	catalog: HTMLElement[];
-}
-
-// === ТИПЫ ДЛЯ УВЕДОМЛЕНИЯ ОБ УСПЕХЕ ===
-
-export interface ISuccessData {
-	total: number;
-}
-
-export interface ISuccessActions {
-	onClick: () => void;
-}

@@ -1,16 +1,14 @@
 // src/components/views/CatalogCard.ts
 import { ProductCardBase } from '@/components/views/ProductCardBase';
 import { IProduct } from '@/types';
-import { ensureElement } from '@/utils/utils';
+import { IEvents } from '@/components/base/Events';
 
 export class CatalogCard extends ProductCardBase<ICatalogCardData> {
-  // Принимаем обработчик onClick вместо events
-  constructor(container: HTMLElement, onClick: () => void) {
-    super(container); // ← не передаём events, так как он не нужен
-
-    // Слушатель клика — вызываем переданный обработчик
+  private _id: string = '';
+  constructor(container: HTMLElement, private readonly events: IEvents) {
+    super(container);
     this.container.addEventListener('click', () => {
-      onClick();
+      if (this._id) this.events.emit('catalog:select', { id: this._id });
     });
   }
 
@@ -19,7 +17,7 @@ export class CatalogCard extends ProductCardBase<ICatalogCardData> {
 
   // Переопределяем сеттер product, чтобы вызвать render с нужными данными
   set product(value: IProduct) {
-    super.product = value;
+    this._id = value.id;
     this.render({
       title: value.title,
       category: value.category,

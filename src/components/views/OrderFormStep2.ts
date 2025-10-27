@@ -14,11 +14,11 @@ export class OrderFormStep2 extends Form<IOrderFormStep2Data> {
 
     // Установка слушателей
     this._emailInput.addEventListener('input', () => {
-      this.events.emit('form:change');
+      this.events.emit('contacts:email', { email: this._emailInput.value });
     });
 
     this._phoneInput.addEventListener('input', () => {
-      this.events.emit('form:change');
+      this.events.emit('contacts:phone', { phone: this._phoneInput.value });
     });
   }
 
@@ -38,20 +38,8 @@ export class OrderFormStep2 extends Form<IOrderFormStep2Data> {
   }
 
   validate(): boolean {
-    const errors: Partial<Record<keyof IOrderFormStep2Data, string>> = {};
-
-    if (!this._emailInput.value.trim()) {
-      errors.email = 'Укажите email';
-    }
-
-    if (!this._phoneInput.value.trim()) {
-      errors.phone = 'Укажите телефон';
-    }
-
-    this.setErrors(errors);
-    this[Object.keys(errors).length ? 'disableSubmit' : 'enableSubmit']();
-
-    return Object.keys(errors).length === 0;
+    // Валидация выполняется на стороне модели/презентера
+    return true;
   }
 }
 

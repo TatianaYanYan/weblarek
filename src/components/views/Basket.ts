@@ -9,6 +9,7 @@ export class Basket extends Component<IBasketData> {
   private _total: HTMLElement;
   private _button: HTMLButtonElement;
   protected events: IEvents;
+  private _items: HTMLElement[] = [];
 
   constructor(container: HTMLElement, events: IEvents) {
     super(container);
@@ -22,29 +23,14 @@ export class Basket extends Component<IBasketData> {
     });
   }
 
-  set items(value: IProduct[]) {
+  set items(value: HTMLElement[]) {
+    this._items = value;
     if (value.length === 0) {
       this._list.innerHTML = '<p class="basket__empty">Корзина пуста</p>';
       this._button.disabled = true;
     } else {
       this._button.disabled = false;
-      this._list.innerHTML = value.map((item, index) => `
-        <li class="basket__item card card_compact">
-          <span class="basket__item-index">${index + 1}</span>
-          <span class="card__title">${item.title}</span>
-          <span class="card__price">${item.price !== null ? item.price + ' синапсов' : 'Бесценно'}</span>
-          <button class="basket__item-delete card__button" data-id="${item.id}" aria-label="удалить"></button>
-        </li>
-      `).join('');
-
-      this._list.querySelectorAll('.basket__item-delete').forEach(btn => {
-        btn.addEventListener('click', (evt) => {
-          const id = (evt.target as HTMLElement).dataset.id;
-          if (id) {
-            this.events.emit('basket:remove', { id }); // ✅ объект
-          }
-        });
-      });
+      this._list.replaceChildren(...value);
     }
   }
 

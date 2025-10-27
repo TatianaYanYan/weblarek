@@ -2,20 +2,24 @@
 import { ProductCardBase } from '@/components/views/ProductCardBase';
 import { IProduct } from '@/types';
 import { ensureElement } from '@/utils/utils';
+import { IEvents } from '@/components/base/Events';
 
 export class PreviewCard extends ProductCardBase<IPreviewCardData> {
   private _description: HTMLElement;
   private _button: HTMLButtonElement;
+  private _id: string = '';
+  private _unavailable: boolean = false;
 
   // Принимаем только обработчик onClick
-  constructor(container: HTMLElement, onClick: () => void) {
-    super(container); // ← только один аргумент: container
+  constructor(container: HTMLElement, private readonly events: IEvents) {
+    super(container);
     this._description = ensureElement<HTMLElement>('.card__text', this.container);
     this._button = ensureElement<HTMLButtonElement>('.card__button', this.container);
 
     // Слушатель клика по кнопке
     this._button.addEventListener('click', () => {
-      onClick();
+      if (!this._id) return;
+      this.events.emit('preview:toggle', { id: this._id });
     });
   }
 
@@ -24,7 +28,7 @@ export class PreviewCard extends ProductCardBase<IPreviewCardData> {
   }
 
   set inCart(value: boolean) {
-    if (this._product?.price === null) {
+    if (this._unavailable) {
       this._button.disabled = true;
       this._button.textContent = 'Недоступно';
     } else {
@@ -35,7 +39,8 @@ export class PreviewCard extends ProductCardBase<IPreviewCardData> {
 
   // Переопределяем сеттер product для вызова render
   set product(value: IProduct) {
-    super.product = value;
+    this._id = value.id;
+    this._unavailable = value.price === null;
     this.render({
       title: value.title,
       category: value.category,

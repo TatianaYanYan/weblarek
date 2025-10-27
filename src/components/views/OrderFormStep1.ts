@@ -18,17 +18,15 @@ export class OrderFormStep1 extends Form<IOrderFormStep1Data> {
 
     // Установка слушателей
     this._cardButton.addEventListener('click', () => {
-      this.payment = 'card';
-      this.events.emit('form:change');
+      this.events.emit('order:payment', { payment: 'card' });
     });
 
     this._cashButton.addEventListener('click', () => {
-      this.payment = 'cash';
-      this.events.emit('form:change');
+      this.events.emit('order:payment', { payment: 'cash' });
     });
 
     this._addressInput.addEventListener('input', () => {
-      this.events.emit('form:change');
+      this.events.emit('order:address', { address: this._addressInput.value });
     });
   }
 
@@ -50,20 +48,8 @@ export class OrderFormStep1 extends Form<IOrderFormStep1Data> {
   }
 
   validate(): boolean {
-    const errors: Partial<Record<keyof IOrderFormStep1Data, string>> = {};
-
-    if (!this._payment) {
-      errors.payment = 'Не выбран способ оплаты';
-    }
-
-    if (!this._addressInput.value.trim()) {
-      errors.address = 'Укажите адрес доставки';
-    }
-
-    this.setErrors(errors);
-    this[Object.keys(errors).length ? 'disableSubmit' : 'enableSubmit']();
-
-    return Object.keys(errors).length === 0;
+    // Валидация выполняется на стороне модели/презентера
+    return true;
   }
 }
 

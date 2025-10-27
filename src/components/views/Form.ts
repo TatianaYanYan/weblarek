@@ -12,7 +12,9 @@ export abstract class Form<T> extends Component<T> {
   constructor(container: HTMLElement, events: IEvents) {
     super(container);
     this.events = events; // ← сохраняем ссылку
-    this._form = ensureElement<HTMLFormElement>('form', this.container);
+    this._form = this.container.tagName === 'FORM'
+      ? this.container as HTMLFormElement
+      : ensureElement<HTMLFormElement>('form', this.container);
     this._submitBtn = ensureElement<HTMLButtonElement>('.button', this.container);
     this._errorContainer = ensureElement<HTMLElement>('.form__errors', this.container);
 
