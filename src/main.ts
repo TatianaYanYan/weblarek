@@ -16,6 +16,7 @@ import { Basket } from '@/components/views/Basket';
 import { BasketCard } from '@/components/views/BasketCard';
 import { OrderFormStep1 } from '@/components/views/OrderFormStep1';
 import { OrderFormStep2 } from '@/components/views/OrderFormStep2';
+import { SuccessModal } from '@/components/views/SuccessModal';
 
 // === Инициализация инфраструктуры ===
 const events = new EventEmitter();
@@ -46,6 +47,10 @@ const tplContacts = ensureElement<HTMLTemplateElement>('#contacts');
 const tplSuccess = ensureElement<HTMLTemplateElement>('#success');
 
 // === Вспомогательные функции рендера ===
+
+// Постоянные ссылки на формы, чтобы не пересоздавать представления при каждом ивенте
+let orderForm1: OrderFormStep1 | null = null;
+let orderForm2: OrderFormStep2 | null = null;
 function renderCatalog() {
   const items = catalog.getItems().map((product) => {
     const el = cloneTemplate<HTMLElement>(tplCardCatalog);
@@ -89,58 +94,61 @@ function openBasket() {
 }
 
 function openOrderStep1() {
-  const el = cloneTemplate<HTMLElement>(tplOrder);
-  const form1 = new OrderFormStep1(el, events);
+  if (!orderForm1) {
+    const el = cloneTemplate<HTMLElement>(tplOrder);
+    orderForm1 = new OrderFormStep1(el, events);
+    // Обработка submit -> переход к шагу 2 (навешиваем один раз)
+    el.addEventListener('submit', () => {
+      const { payment, address } = orderForm1!.data;
+      buyer.set('payment', payment);
+      buyer.set('address', address);
+      openOrderStep2();
+    });
+  }
   // заполнить текущими данными (если есть)
-  form1.payment = buyer.getData().payment;
-  form1.address = buyer.getData().address;
-  form1.validate();
-  // Обработка submit -> переход к шагу 2
-  el.addEventListener('submit', () => {
-    const { payment, address } = form1.data;
-    buyer.set('payment', payment);
-    buyer.set('address', address);
-    openOrderStep2();
-  });
-  modal.content = form1.render();
+  orderForm1.payment = buyer.getData().payment;
+  orderForm1.address = buyer.getData().address;
+  orderForm1.validate();
+  modal.content = orderForm1.render();
   modal.open();
   isBasketOpen = false;
 }
 
 function openOrderStep2() {
-  const el = cloneTemplate<HTMLElement>(tplContacts);
-  const form2 = new OrderFormStep2(el, events);
-  form2.email = buyer.getData().email;
-  form2.phone = buyer.getData().phone;
-  form2.validate();
-  el.addEventListener('submit', async () => {
-    const { email, phone } = form2.data;
-    buyer.set('email', email);
-    buyer.set('phone', phone);
-    // Отправка заказа
-    const order = {
-      payment: buyer.getData().payment,
-      email: buyer.getData().email,
-      phone: buyer.getData().phone,
-      address: buyer.getData().address,
-      total: cart.getTotal(),
-      items: cart.getItems().map((p) => p.id)
-    };
-    try {
-      const res = await larekApi.createOrder(order);
-      // Показать success
-      const s = cloneTemplate<HTMLElement>(tplSuccess);
-      const totalEl = s.querySelector('.order-success__description');
-      if (totalEl) totalEl.textContent = `Списано ${res.total} синапсов`;
-      modal.content = s;
-      modal.open();
-      cart.clear();
-      buyer.clear();
-    } catch (e) {
-      console.error('Order error', e);
-    }
-  });
-  modal.content = form2.render();
+  if (!orderForm2) {
+    const el = cloneTemplate<HTMLElement>(tplContacts);
+    orderForm2 = new OrderFormStep2(el, events);
+    el.addEventListener('submit', async () => {
+      const { email, phone } = orderForm2!.data;
+      buyer.set('email', email);
+      buyer.set('phone', phone);
+      // Отправка заказа
+      const order = {
+        payment: buyer.getData().payment,
+        email: buyer.getData().email,
+        phone: buyer.getData().phone,
+        address: buyer.getData().address,
+        total: cart.getTotal(),
+        items: cart.getItems().map((p) => p.id)
+      };
+      try {
+        const res = await larekApi.createOrder(order);
+        // Показать success через представление
+        const successEl = cloneTemplate<HTMLElement>(tplSuccess);
+        const successView = new SuccessModal(successEl, events);
+        modal.content = successView.render({ total: res.total });
+        modal.open();
+        cart.clear();
+        buyer.clear();
+      } catch (e) {
+        console.error('Order error', e);
+      }
+    });
+  }
+  orderForm2.email = buyer.getData().email;
+  orderForm2.phone = buyer.getData().phone;
+  orderForm2.validate();
+  modal.content = orderForm2.render();
   modal.open();
   isBasketOpen = false;
 }
@@ -162,14 +170,10 @@ events.on('cart:change', () => {
 // Реакции на поля форм: данные -> модель -> валидация -> ошибки в форме
 events.on<{ payment: 'card' | 'cash' }>('order:payment', ({ payment }) => {
   buyer.set('payment', payment);
-  const errors = buyer.validate();
-  // подсветим кнопки в форме 1
-  const container = ensureElement<HTMLElement>('#modal-container .order');
-  const cardBtn = container.querySelector<HTMLButtonElement>('[name="card"]');
-  const cashBtn = container.querySelector<HTMLButtonElement>('[name="cash"]');
-  if (cardBtn && cashBtn) {
-    cardBtn.classList.toggle('button_alt-active', payment === 'card');
-    cashBtn.classList.toggle('button_alt-active', payment === 'cash');
+  buyer.validate();
+  // Обновляем состояние кнопок через представление формы шага 1
+  if (orderForm1) {
+    orderForm1.payment = payment;
   }
 });
 events.on<{ address: string }>('order:address', ({ address }) => {
@@ -180,6 +184,11 @@ events.on<{ email: string }>('contacts:email', ({ email }) => {
 });
 events.on<{ phone: string }>('contacts:phone', ({ phone }) => {
   buyer.set('phone', phone);
+});
+
+// Закрытие success-модалки по событию от представления
+events.on('success:close', () => {
+  modal.close();
 });
 
 // === Подписки на события UI ===
